@@ -1,0 +1,18 @@
+#!/bin/zsh
+#PBS -l nodes=1:ppn=4
+#PBS -l pmem=5gb
+#PBS -N rna_bam_qsort
+#PBS -t 1-30
+
+source ${PBS_O_WORKDIR}/../pbs_helper_functions.bash
+
+cd "${WORK_PATH}"
+
+echo "In ${WORK_PATH}"
+
+files=($(cat samples.txt))
+SAMPLE="${files[$PBS_ARRAYID]}"
+
+~/bin/samtools sort -@ 4 -m 5G  -n "unmapped/${SAMPLE}.bam" "unmapped/${SAMPLE}_qsort"
+
+stageout
