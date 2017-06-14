@@ -1,0 +1,43 @@
+#!/bin/zsh
+#PBS -l nodes=1:ppn=12:ib
+#PBS -l pmem=1700mb
+#PBS -N rna_align_th
+#PBS -t 0-30
+#PBS -l vmem=32gb
+#PBS -e /home/jhayes1/log/th.err
+#PBS -o /home/jhayes1/log/th.out
+
+PATH=/diazlablab/shared/bin:$PATH
+
+cd "${FQ_PATH}"
+
+
+if [ ! -d tophat_out ]; then
+    mkdir tophat_out
+fi
+
+echo "In ${FQ_PATH}"
+
+f1=($(cat samples.txt))
+
+SAMPLE=${f1[$PBS_ARRAYID]}
+
+echo "${SAMPLE}"
+
+export BOWTIE_INDEXES="/songlab/shared/hg19/Homo_sapiens/UCSC/hg19/Sequence/BowtieIndex/"
+export BOWTIE2_INDEXES="/songlab/shared/hg19/Homo_sapiens/UCSC/hg19/Sequence/Bowtie2Index/"
+
+echo "align to hg19_genes and ERCC : job ${SAMPLE} in directory ${FQ_PATH}/trimmed_fastqs" >>"/costellolab/jhayes1/rna_seq_scripts/logs/align_log`date|tr ' ' '-'`.txt"
+
+/diazlab/shared/tophat/tophat-2.0.14.Linux_x86_64/tophat2 -o "${FQ_PATH}/tophat_out/Tophat_${SAMPLE}" -p 12 --transcriptome-index=/songlab/shared/hg19/hg19_GencodeCompV19 --library-type fr-firststrand -r 200 --prefilter-multihits genome "trimmed_fastqs/${SAMPLE}_R1_001_val_1.fq.gz" "trimmed_fastqs/${SAMPLE}_R2_001_val_2.fq.gz"
+
+cd ${FQ_PATH}/tophat_out/Tophat_${SAMPLE}
+if [ -f accepted_hits.bam ]; then
+    samtools index accepted_hits.bam
+    samtools flagstat accepted_hits.bam>accepted_hits.stats
+    samtools index unmapped.bam
+    samtools flagstat unmapped.bam>unmapped.stats
+fi
+
+
+stageout

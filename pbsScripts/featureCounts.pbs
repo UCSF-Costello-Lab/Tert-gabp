@@ -1,0 +1,27 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=24
+#PBS -l vmem=8gb
+#PBS -N fc_rna
+#PBS -e /home/jhayes1/log/fc.err
+#PBS -o /home/jhayes1/log/fc.out
+
+
+source /costellolab/jhayes1/rna_seq_scripts/pbs_helper_functions.bash
+export PATH=/diazlab/shared/bin:$PATH
+
+cd "${BAM_PATH}"
+
+infl=''
+for f in $(cat samples.txt)
+do
+    infl="${infl}${BAM_PATH}/Tophat_${f}/accepted_hits.bam "
+done 
+echo "${infl}"
+
+
+/home/apankov/bin/featureCounts -s 2 -B -p -O -T 24 -a "/songlab/shared/hg19/hg19_GencodeCompV19_geneid.gtf" -o "${BAM_PATH}/../featureCounts_out/fc_counts_out.txt" ${infl}
+
+
+
+stageout
+

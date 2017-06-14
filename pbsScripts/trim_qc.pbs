@@ -1,0 +1,26 @@
+#!/bin/bash
+#PBS -l nodes=1:ppn=1
+#PBS -l vmem=8gb
+#PBS -N trim
+#PBS -e trim.err
+#PBS -o trim.out
+#PBS -t 0-36
+
+export PATH=/songlab/shared/bin:$PATH
+
+source /costellolab/shared/bin/pbs_helper_functions.bash
+
+cd "$FQ_PATH"
+mkdir trimmed_fastqs
+
+files=($(cat samples.txt))
+SAMPLE="${files[$PBS_ARRAYID]}"
+
+READ1="${SAMPLE}_R1_001.fastq.gz"
+READ2="${SAMPLE}_R2_001.fastq.gz"
+
+trim_galore -q 20 --fastqc -o ./trimmed_fastqs --paired ${READ1[$i]} ${READ2[$i]}
+
+
+stageout
+
